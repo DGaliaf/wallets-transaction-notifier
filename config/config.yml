@@ -1,0 +1,8 @@
+---
+bot:
+  token: "6613261773:AAFFmGFgNe5ShgLZ6jZr-UimIRYsPgo3W4I"
+db:
+  host: "localhost"
+  port: 27017
+  username: "test"
+  password: "test"
