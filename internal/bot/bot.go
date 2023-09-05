@@ -37,20 +37,3 @@ func (b Bot) Run() error {
 
 	return nil
 }
-
-func (b Bot) handleUpdates(u tgbotapi.UpdateConfig) {
-	for update := range b.bot.GetUpdatesChan(u) {
-		if update.Message != nil {
-			b.handleMessages(update)
-		}
-	}
-}
-
-func (b Bot) handleMessages(update tgbotapi.Update) {
-	log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-	msg.ReplyToMessageID = update.Message.MessageID
-
-	b.bot.Send(msg)
-}

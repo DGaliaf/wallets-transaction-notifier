@@ -6,6 +6,8 @@ import (
 	config "wallet-transaction-notification/internal/cfg"
 )
 
+// TODO: Finite State Machine
+
 func main() {
 	cfgPath := "./config/config.yml"
 	cfg := config.GetConfig(cfgPath)
