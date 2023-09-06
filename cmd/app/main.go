@@ -1,23 +1,27 @@
 package main
 
 import (
+	"context"
 	"log"
 	"wallet-transaction-notification/internal/app"
 	config "wallet-transaction-notification/internal/cfg"
 )
 
-// TODO: Finite State Machine
+// TODO: Check for duplicate users
+// 		 Make wallet validation
 
 func main() {
 	cfgPath := "./config/config.yml"
 	cfg := config.GetConfig(cfgPath)
 
-	a, err := app.NewApp(cfg)
+	ctx := context.Background()
+
+	a, err := app.NewApp(ctx, cfg)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := a.Run(); err != nil {
+	if err := a.Run(ctx); err != nil {
 		log.Fatalln(err)
 	}
 }

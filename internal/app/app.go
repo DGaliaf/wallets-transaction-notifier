@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"wallet-transaction-notification/internal/bot"
 	"wallet-transaction-notification/internal/cfg"
@@ -15,16 +14,16 @@ type App struct {
 	db  *mongodb.Database
 }
 
-func NewApp(cfg *cfg.Config) (*App, error) {
-	db := mongodb.NewDatabase(cfg)
+func NewApp(ctx context.Context, cfg *cfg.Config) (*App, error) {
+	log.Println("...start application")
 
-	log.Println("...connect to database")
-	collection, err := db.Run(context.Background())
+	log.Println("...start database")
+	db, err := mongodb.NewDatabase(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	tgBot := bot.NewBot(cfg, collection)
+	tgBot := bot.NewBot(cfg, db)
 
 	return &App{
 		cfg: cfg,
@@ -33,17 +32,9 @@ func NewApp(cfg *cfg.Config) (*App, error) {
 	}, nil
 }
 
-func (a App) Run() error {
-	log.Println("...start application")
-
-	group, _ := errgroup.WithContext(context.Background())
-
-	group.Go(func() error {
-		log.Println("...start telegram bot")
-		return a.bot.Run()
-	})
-
-	if err := group.Wait(); err != nil {
+func (a App) Run(ctx context.Context) error {
+	log.Println("...start telegram bot")
+	if err := a.bot.Run(ctx); err != nil {
 		return err
 	}
 

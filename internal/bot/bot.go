@@ -1,26 +1,30 @@
 package bot
 
 import (
+	"context"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"wallet-transaction-notification/internal/cfg"
+	"wallet-transaction-notification/internal/database/mongodb"
 )
 
 type Bot struct {
-	cfg        *cfg.Config
-	collection *mongo.Collection
-	bot        *tgbotapi.BotAPI
+	cfg *cfg.Config
+	db  *mongodb.Database
+	bot *tgbotapi.BotAPI
+
+	token *string
 }
 
-func NewBot(cfg *cfg.Config, collection *mongo.Collection) *Bot {
+func NewBot(cfg *cfg.Config, db *mongodb.Database) *Bot {
 	return &Bot{
-		cfg:        cfg,
-		collection: collection,
+		cfg:   cfg,
+		db:    db,
+		token: new(string),
 	}
 }
 
-func (b Bot) Run() error {
+func (b Bot) Run(ctx context.Context) error {
 	var err error
 	if b.bot, err = tgbotapi.NewBotAPI(b.cfg.Bot.Token); err != nil {
 		return err
@@ -33,7 +37,7 @@ func (b Bot) Run() error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	b.handleUpdates(u)
+	b.handleUpdates(ctx, u)
 
 	return nil
 }

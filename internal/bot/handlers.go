@@ -1,35 +1,58 @@
 package bot
 
 import (
+	"context"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 )
 
-func (b Bot) handleUpdates(u tgbotapi.UpdateConfig) {
+func (b Bot) handleUpdates(ctx context.Context, u tgbotapi.UpdateConfig) {
 	for update := range b.bot.GetUpdatesChan(u) {
 		if update.Message != nil {
 			if update.Message.IsCommand() {
-				b.handleCommands(update)
+				b.handleCommands(ctx, update)
 			} else {
-				b.handleMessages(update)
+				b.handleMessages(ctx, update)
 			}
 		}
 	}
 }
 
-func (b Bot) handleMessages(update tgbotapi.Update) {
-	log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+func (b Bot) handleMessages(ctx context.Context, update tgbotapi.Update) {
+	if b.token != nil {
+		if *b.token == "/track" {
+			b.processAddWallet(ctx, update)
+		}
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-	msg.ReplyToMessageID = update.Message.MessageID
+		b.token = nil
+	}
 
-	b.bot.Send(msg)
+	if update.Message.Text == "a" {
+		if err := b.db.CreateUser(ctx, update.Message.From.ID); err != nil {
+			log.Println(err)
+		}
+	}
+
+	if update.Message.Text == "g" {
+		user, err := b.db.GetUser(ctx, update.Message.From.ID)
+		if err != nil {
+			log.Println(err)
+		}
+
+		log.Println(user.ID, user.UserID, user.Wallets)
+	}
+
+	if update.Message.Text == "aw" {
+		if err := b.db.AddWallet(ctx, update.Message.From.ID, "test"); err != nil {
+			log.Println(err)
+		}
+	}
 }
 
-func (b Bot) handleCommands(update tgbotapi.Update) {
+func (b Bot) handleCommands(ctx context.Context, update tgbotapi.Update) {
 	switch update.Message.Command() {
 	case "start":
-		b.processStart(update)
+		b.processStart(ctx, update)
 	case "track":
 		b.processTrack(update)
 	case "profile":
